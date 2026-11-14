@@ -61,3 +61,7 @@ body.maint-lock{overflow:hidden}
 .fire-group.prem{border-color:var(--gold)}
 .fire-edit > .mini{justify-self:start}
 .ok-note{color:var(--good)!important;font-weight:500}
+.fire-day{display:grid;gap:10px;border:1px solid var(--accent);border-radius:var(--r-sm);padding:12px;background:var(--accent-soft)}
+.fire-day h3{margin:0}
+.fire-day-sum{margin:0;font:500 13.5px var(--mono);color:var(--ink)}
+.fire-day > .mini{justify-self:start}

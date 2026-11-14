@@ -1329,6 +1329,10 @@ body.maint-lock{overflow:hidden}
 .fire-group.prem{border-color:var(--gold)}
 .fire-edit > .mini{justify-self:start}
 .ok-note{color:var(--good)!important;font-weight:500}
+.fire-day{display:grid;gap:10px;border:1px solid var(--accent);border-radius:var(--r-sm);padding:12px;background:var(--accent-soft)}
+.fire-day h3{margin:0}
+.fire-day-sum{margin:0;font:500 13.5px var(--mono);color:var(--ink)}
+.fire-day > .mini{justify-self:start}
 </style>
 </head><body><div class="wrap">
   <header class="top">
@@ -6469,11 +6473,11 @@ if (saved && saved.topic && Date.now() - (saved.ts || 0) < 864e5) {
 /* Огоньки — валюта доступа: владелец начисляет их в кабинете, они сгорают по дням (perDay в день),
    пока действует полный доступ. Баланс хранится в subs/<id> (пишет только владелец), поэтому
    его нельзя подделать очисткой браузера. Продажи — admin/ledger, общий счётчик — config/stats. */
-CONFIG.fire = Object.assign({ enabled: false, perDay: 1, pPerDay: 1, welcome: 10, currency: "USD", note: "",
+CONFIG.fire = Object.assign({ enabled: false, perDay: 1, pPerDay: 1, unit: 0.1, punit: 0.3, welcome: 10, currency: "USD", note: "",
   packs: [{ fire: 10, price: 1, link: "" }, { fire: 30, price: 3, link: "" }, { fire: 100, price: 8, link: "" }],
   ppacks: [{ fire: 10, price: 3, link: "" }, { fire: 30, price: 8, link: "" }, { fire: 100, price: 20, link: "" }] }, CONFIG.fire || {});
 CONFIG.maint = Object.assign({ on: false, msg: "" }, CONFIG.maint || {});
-const FIRE = { ledger: [], ledgerReady: false, live: 0, total: null, gifted: new Set(), wired: false, dlg: null };
+const FIRE = { free: 0, ledger: [], ledgerReady: false, live: 0, total: null, gifted: new Set(), wired: false, dlg: null };
 const fireOn = () => !!(CONFIG.fire && CONFIG.fire.enabled);
 const perDay = () => Math.max(1, Math.round(+CONFIG.fire.perDay || 1));
 const pPerDay = () => Math.max(1, Math.round(+CONFIG.fire.pPerDay || 1));
@@ -6504,7 +6508,11 @@ function packLink(p){
 function fireLocked(){ if (!fireOn()) return false; if (!isVisitorView()) return false; return !(subActive(ACCESS.sub) || premActive(ACCESS.sub)); }
 premLocked = (f => function(){ if (fireOn()) { if (!isVisitorView()) return false; if (!ACCESS.resolved) return true; return !premActive(ACCESS.sub); } return f(); })(premLocked);
 paywall = (f => function(){ return fireOn() ? firePaywall("prem") : f(); })(paywall);
-ask = (f => async function(input, tier, onText){ if (fireLocked()) { fireNeed(); throw { code: "no_fire" }; } return f(input, tier, onText); })(ask);
+ask = (f => async function(input, tier, onText){ if (!FIRE.free && fireLocked()) { fireNeed(); throw { code: "no_fire" }; } return f(input, tier, onText); })(ask);
+/* робот-гид отвечает бесплатно */
+askJSON = (f => async function(prompt, tier, label){ if (label !== "Гид") return f(prompt, tier, label); FIRE.free++; try { return await f(prompt, tier, label); } finally { FIRE.free--; } })(askJSON);
+/* Джарвис отвечает за огоньки; простые команды (открыть раздел, тема, назад) остаются бесплатными */
+jvClaude = (f => async function(q){ if (fireLocked()) return "Чтобы я отвечал на вопросы, нужны огоньки: " + perDay() + " 🔥 = 1 день. Купить их можно в профиле. А бесплатные подсказки по сайту даёт робот-гид справа внизу."; return f(q); })(jvClaude);
 start = (f => function(topic, extra){ if (fireLocked()) { fireNeed(); return; } return f(topic, extra); })(start);
 errText = (f => function(e){ if (e && e.code === "no_fire") return "Нужны огоньки 🔥: открой «Купить огоньки» в профиле."; return f(e); })(errText);
 
@@ -6540,7 +6548,8 @@ function firePaywall(focus){
   const sec = k => { const b = el("div", "fire-kind " + k); b.append(el("h3", null, KIND[k].ic + " " + KIND[k].name));
     b.append(el("p", "note", k === "prem"
       ? kindPerDay(k) + " ⭐🔥 = 1 день премиум-доступа: всё, что дают обычные, плюс Premium-навыки с оценкой " + PREMIUM_AT + "–10, экспертный уровень, формат «Фреймворк решений», автоулучшение и улучшение до 10."
-      : kindPerDay(k) + " 🔥 = 1 день доступа: создание навыков, тесты и навыки с оценкой до " + PREMIUM_AT + "."));
+      : kindPerDay(k) + " 🔥 = 1 день доступа: создание навыков, тесты, голосовой помощник Джарвис и навыки с оценкой до " + PREMIUM_AT + "."));
+    const u = +(k === "prem" ? CONFIG.fire.punit : CONFIG.fire.unit) || 0; if (u) b.append(el("p", "fire-day-sum", "1 день " + (k === "prem" ? "премиум-доступа" : "доступа") + " ≈ " + fmtMoney(u * kindPerDay(k)) + " " + curSym()));
     b.append(firePackGrid(k)); return b; };
   if (focus === "prem") w.append(sec("prem"), sec("std")); else w.append(sec("std"), sec("prem"));
   if (ACCESS.uid) {
@@ -6682,10 +6691,22 @@ function firePanel(){
   const en = el("label", "check"); const cb = el("input"); cb.type = "checkbox"; cb.checked = !!F.enabled; en.append(cb, document.createTextNode(" Сайт платный: создание навыков, тесты и Premium — за огоньки"));
   p.append(en, el("p", "note", "🔥 Обычные огоньки открывают создание навыков, тесты и навыки с оценкой до " + PREMIUM_AT + ". ⭐🔥 Премиум-огоньки открывают всё это плюс Premium-навыки " + PREMIUM_AT + "–10, экспертный уровень и улучшение до 10. И те и другие сгорают по дням."));
   const pd = inp("adm-fire-pd", String(perDay()), "1"), ppd = inp("adm-fire-ppd", String(pPerDay()), "1"), wl = inp("adm-fire-wl", String(F.welcome), "10");
+  const un = inp("adm-fire-unit", String(F.unit != null ? F.unit : ""), "0.1"), pun = inp("adm-fire-punit", String(F.punit != null ? F.punit : ""), "0.3");
   const cur = el("select"); Object.keys(CUR).forEach(c => { const o = el("option", null, c + " " + CUR[c]); o.value = c; cur.append(o); }); cur.value = F.currency || "USD";
-  const r1 = el("div", "adm-row"); r1.append(field("🔥 за 1 день обычного доступа", pd), field("⭐🔥 за 1 день премиум-доступа", ppd)); p.append(r1);
+  const day = el("div", "fire-day"); day.append(el("h3", null, "💲 Стоимость одного дня"));
+  const r1 = el("div", "adm-row"); r1.append(field("🔥 огоньков за 1 день обычного доступа", pd), field("⭐🔥 огоньков за 1 день премиум-доступа", ppd));
+  const r1c = el("div", "adm-row"); r1c.append(field("Цена 1 🔥", un), field("Цена 1 ⭐🔥", pun));
+  const sumLine = el("p", "fire-day-sum");
+  const num = v => +String(v).replace(",", ".") || 0;
+  const updDay = () => { const sym = CUR[cur.value] || cur.value, d1 = Math.max(1, Math.round(num(pd.value) || 1)), d2 = Math.max(1, Math.round(num(ppd.value) || 1));
+    sumLine.textContent = "1 день обычного доступа = " + d1 + " 🔥" + (num(un.value) ? " = " + fmtMoney(d1 * num(un.value)) + " " + sym : "") + " · 1 день премиум = " + d2 + " ⭐🔥" + (num(pun.value) ? " = " + fmtMoney(d2 * num(pun.value)) + " " + sym : ""); };
+  [pd, ppd, un, pun].forEach(x => x.oninput = updDay); cur.onchange = updDay; updDay();
+  const recalc = el("button", "mini", "Пересчитать цены пакетов по цене огонька"); recalc.type = "button";
+  day.append(r1, r1c, sumLine, recalc);
+  p.append(day);
   const r1b = el("div", "adm-row"); r1b.append(field("Подарок при регистрации, 🔥", wl), field("Валюта", cur)); p.append(r1b);
   const ed1 = packEditor(F.packs), ed2 = packEditor(F.ppacks);
+  recalc.onclick = () => { [[ed1, num(un.value)], [ed2, num(pun.value)]].forEach(([ed, u]) => { if (!u) return; ed.querySelectorAll(".fe-row").forEach(r => { const n = num(r.querySelector(".fe-n").value); if (n > 0) r.querySelector(".fe-p").value = fmtMoney(n * u); }); }); recalc.textContent = "Цены пакетов пересчитаны — не забудь сохранить"; };
   const g1 = el("div", "fire-group"); g1.append(el("div", "lbl", "🔥 Пакеты обычных огоньков: количество, цена, ссылка PayPal"), ed1);
   const g2 = el("div", "fire-group prem"); g2.append(el("div", "lbl", "⭐🔥 Пакеты премиум-огоньков (навыки " + PREMIUM_AT + "–10): количество, цена, ссылка PayPal"), ed2);
   p.append(g1, g2, el("p", "note", "Для ссылки paypal.me сумма пакета подставится сама. Покупатель указывает свой ID в комментарии к платежу."));
@@ -6696,7 +6717,7 @@ function firePanel(){
     const l1 = ed1.read(), l2 = ed2.read(); const bad = l1.concat(l2).find(x => x.link && !PAYPAL_RE.test(x.link));
     if (bad) { err.textContent = "Ссылка пакета на " + bad.fire + " должна начинаться с https://www.paypal.com/ или https://paypal.me/"; err.classList.remove("hidden"); return; }
     err.classList.add("hidden");
-    Object.assign(CONFIG.fire, { enabled: cb.checked, perDay: Math.max(1, Math.round(+pd.value || 1)), pPerDay: Math.max(1, Math.round(+ppd.value || 1)), welcome: Math.max(0, Math.round(+wl.value || 0)), currency: cur.value, packs: l1, ppacks: l2, note: nt.value.trim().slice(0, 300) });
+    Object.assign(CONFIG.fire, { enabled: cb.checked, unit: num(un.value), punit: num(pun.value), perDay: Math.max(1, Math.round(+pd.value || 1)), pPerDay: Math.max(1, Math.round(+ppd.value || 1)), welcome: Math.max(0, Math.round(+wl.value || 0)), currency: cur.value, packs: l1, ppacks: l2, note: nt.value.trim().slice(0, 300) });
     saveConfig(sv); setTimeout(() => { applyConfig(); }, 300);
   };
   p.append(err, sv);
