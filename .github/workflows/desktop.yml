@@ -1,0 +1,52 @@
+# Builds the Academy Skills desktop app on GitHub's machines.
+# Run it from the Actions tab ("Run workflow") or by pushing changes to the site or desktop/.
+# The installers appear at the bottom of the run page under "Artifacts".
+name: Desktop app
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "index.html"
+      - "standalone.js"
+      - "desktop/**"
+      - ".github/workflows/desktop.yml"
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            script: dist:win
+            name: Academy-Skills-Windows
+            files: desktop/dist/*.exe
+          - os: macos-latest
+            script: dist:mac
+            name: Academy-Skills-macOS
+            files: desktop/dist/*.dmg
+          - os: ubuntu-latest
+            script: dist:linux
+            name: Academy-Skills-Linux
+            files: desktop/dist/*.AppImage
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        working-directory: desktop
+    env:
+      CSC_IDENTITY_AUTO_DISCOVERY: "false"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: desktop/package-lock.json
+      - run: npm ci
+      - run: npm run ${{ matrix.script }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.name }}
+          path: ${{ matrix.files }}
+          if-no-files-found: error

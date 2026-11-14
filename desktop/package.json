@@ -10,7 +10,7 @@
     "sync": "node sync-site.js",
     "start": "npm run sync && electron .",
     "dist:win": "npm run sync && electron-builder --win nsis --x64",
-    "dist:mac": "npm run sync && electron-builder --mac dmg",
+    "dist:mac": "npm run sync && electron-builder --mac dmg --universal",
     "dist:linux": "npm run sync && electron-builder --linux AppImage"
   },
   "devDependencies": {
