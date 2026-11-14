@@ -50,3 +50,22 @@ python3 -m http.server 8000
 1. Сохраните HTML новой версии артефакта (например, попросите Claude Code прочитать артефакт).
 2. Выполните `python3 tools/build.py путь/к/artifact.html index.html`.
 3. Загрузите обновлённый `index.html` на хостинг.
+
+## Приложение для компьютера
+
+Папка `desktop/` — настольное приложение на Electron с тем же сайтом внутри. Ссылки на claude.ai открываются в браузере по умолчанию.
+
+Сборка (нужен Node.js 22+):
+
+```bash
+cd desktop
+npm install
+npm run dist:win     # Windows: dist/Academy-Skills-Setup-1.0.0.exe (на Linux/macOS нужен Wine)
+npm run dist:mac     # macOS: dist/Academy-Skills-1.0.0.dmg (только на Mac)
+npm run dist:linux   # Linux: dist/Academy-Skills-1.0.0.AppImage
+npm start            # запустить без сборки установщика
+```
+
+Перед каждой сборкой `npm run sync` копирует актуальные файлы сайта в `desktop/app/`.
+
+Установщик не подписан сертификатом, поэтому Windows при первом запуске покажет окно SmartScreen: «Подробнее» → «Выполнить в любом случае».
