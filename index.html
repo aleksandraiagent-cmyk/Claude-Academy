@@ -1422,7 +1422,7 @@ html.jv-lock,html.jv-lock body{overflow:hidden}
         <li><b>★ Premium</b> — навыки на 9–10 баллов и кандидаты на улучшение.</li>
         <li><b>Тест</b> — проверка навыка на задаче, на наборе задач из файла или анализ готового ответа.</li>
         <li><b>Память</b> — журнал уроков, источники знаний, эталоны (до 50), каталог навыков GitHub и справочник правил.</li>
-        <li><b>Профиль</b> (кнопка справа вверху) — тема оформления и ключ Claude API.</li>
+        <li><b>Профиль</b> (кнопка справа вверху) — тема оформления и переход к созданию навыков в Claude.</li>
         <li><b>Робот-гид</b> (кнопка внизу справа) — подскажет, где что находится и как что делать.</li>
       </ul>
       <h3>Откуда знания</h3>
@@ -1435,7 +1435,7 @@ html.jv-lock,html.jv-lock body{overflow:hidden}
       <h3>Самообучение</h3>
       <p>После каждого навыка слабые места, найденные оценщиками, твои отзывы и результаты тестов обобщаются в уроки. Следующие навыки создаются уже с ними. Знания и каталог обновляются раз в неделю.</p>
       <h3>Подписка Premium</h3>
-      <p>По подписке открываются навыки на 9–10 баллов, формат «Фреймворк решений», уровень «Экспертный», автоулучшение до 9+, улучшение до 10 и Premium-эталоны каталога (оценка качества 8–10). В этой версии сайта все разделы открыты бесплатно: нужен только свой ключ Claude API.</p>
+      <p>По подписке открываются навыки на 9–10 баллов, формат «Фреймворк решений», уровень «Экспертный», автоулучшение до 9+, улучшение до 10 и Premium-эталоны каталога (оценка качества 8–10). На этом сайте все разделы открыты бесплатно. Создание навыков и тесты работают в Claude под вашим аккаунтом.</p>
       <h3>Что скачивается</h3>
       <p>Архив <code>.zip</code>: <code>SKILL.md</code> для агента, папки <code>templates/</code>, <code>scripts/</code>, <code>references/</code> и <code>evals/</code>, а также карточка запросов — памятка, как правильно просить навык. Архив можно загрузить в Claude в настройках навыков или положить в папку навыков Claude Code.</p>
       <h3>Где работают навыки</h3>
@@ -1452,8 +1452,8 @@ html.jv-lock,html.jv-lock body{overflow:hidden}
       <p>Каталог, эталоны, созданные файлы и скрипты проходят несколько уровней проверки. Подробно — в разделе <button type="button" class="linkbtn" data-go="security">Безопасность</button>.</p>
       <h3>Данные и ограничения</h3>
       <ul>
-        <li>Встроенные навыки видны всем. Новые навыки, уроки и эталоны сохраняются в этом браузере (localStorage): скачивай важные навыки архивом.</li>
-        <li>Генерация работает через твой ключ Claude API (меню ☰ → «Ключ Claude API»). Ключ хранится только в этом браузере и отправляется только на api.anthropic.com.</li>
+        <li>Сайт показывает библиотеку навыков, Premium, память и каталог. Навыки можно скачать архивом.</li>
+        <li>Создание навыков и тесты работают в Academy Skills на claude.ai: вход через свой аккаунт Claude, расходуются лимиты его подписки, ключ API и оплата не нужны.</li>
         <li>Оценки ставит Claude по заданным критериям — это ориентир, а не гарантия. Перед реальным использованием навык стоит проверить на своих задачах.</li>
       </ul>
       <p class="note" id="info-ver"></p>
@@ -1506,7 +1506,7 @@ html.jv-lock,html.jv-lock body{overflow:hidden}
       <h3>4. Твои данные и оплата</h3>
       <ul>
         <li>Сайт не собирает данные: нет аккаунтов, оплаты и сервера. Навыки, уроки и настройки хранятся только в твоём браузере.</li>
-        <li>Ключ Claude API хранится в этом браузере и отправляется только на api.anthropic.com.</li>
+        <li>Создание навыков идёт в claude.ai под аккаунтом посетителя: этот сайт не видит его данные и не платит за запросы.</li>
         <li>Голосовой помощник использует распознавание и озвучку речи самого браузера.</li>
       </ul>
 
@@ -1664,7 +1664,7 @@ function parseJSON(t){
   if (a < 0 || b < a) throw { code: "parse" };
   return JSON.parse(t.slice(a, b + 1));
 }
-const FATAL = ["not_granted", "rate_limited", "unavailable", "bad_key"];
+const FATAL = ["not_granted", "rate_limited", "unavailable"];
 async function ask(input, tier, onText){
   const s = await samplerP;
   if (!s) throw { code: "unavailable" };
@@ -1702,9 +1702,7 @@ async function askJSON(prompt, tier, label){
 }
 function errText(e){
   const c = e && e.code;
-  if (c === "unavailable") return (window.claude&&window.claude.standalone) ? "Добавь ключ Claude API: меню ☰ → «Ключ Claude API»." : "Генерация работает, когда страница открыта в Claude.";
-  if (c === "bad_key") return "Ключ Claude API не принят" + (e.message ? " (" + e.message + ")" : "") + ". Проверь ключ: меню ☰ → «Ключ Claude API».";
-  if (c === "network") return "Нет связи с api.anthropic.com. Проверь интернет и нажми «Продолжить».";
+  if (c === "unavailable") { if ((window.claude&&window.claude.standalone)) { window.claude.openClaude(); return "Это работает в Claude под вашим аккаунтом: меню ☰ → «Создать навык в Claude»."; } return "Генерация работает, когда страница открыта в Claude."; }
   if (c === "not_granted") return "Странице не разрешено обращаться к Claude. Подтверди запрос в окне согласия и попробуй ещё раз.";
   if (c === "rate_limited") return "Слишком много запросов подряд. Подожди минуту.";
   if (c === "parse") return "Модель вернула ответ в неожиданном формате.";
@@ -4383,13 +4381,13 @@ function toggleProfile(open){
   m.innerHTML = "";
   const hd = el("div", "pm-h"); hd.append(el("b", null, ACCESS.name || (ACCESS.uid ? "Пользователь" : "Гость")));
   const [st, tone] = profileStatus(); const chip = el("span", "zbadge z-" + tone); chip.append(el("i", "zdot z-" + tone), document.createTextNode(st)); hd.append(chip); m.append(hd);
-  if ((window.claude&&window.claude.standalone)) m.append(el("p", "note", "Все разделы открыты. Навыки и настройки хранятся в этом браузере.")); else if (!ACCESS.uid) m.append(el("p", "note", "Вы не вошли. Откройте страницу в claude.ai под своим аккаунтом, чтобы видеть профиль и оформить подписку."));
+  if ((window.claude&&window.claude.standalone)) m.append(el("p", "note", "Все разделы открыты. Создавать навыки — в Claude под своим аккаунтом.")); else if (!ACCESS.uid) m.append(el("p", "note", "Вы не вошли. Откройте страницу в claude.ai под своим аккаунтом, чтобы видеть профиль и оформить подписку."));
   if (ACCESS.uid && !ACCESS.owner) { const r = el("div", "pm-id"); r.append(el("span", "note", "Ваш ID"), el("code", null, ACCESS.uid)); const c = el("button", "mini", "Копировать"); c.type = "button"; c.onclick = () => copyText(ACCESS.uid, c); r.append(c); m.append(r); }
   const item = (t, fn) => { const x = el("button", "pm-item", t); x.type = "button"; x.onclick = () => { toggleProfile(false); fn(); }; m.append(x); };
   if (CONFIG.sub.enabled && !ACCESS.owner && !subActive(ACCESS.sub)) item("★ Оформить Premium", () => { selectTab("prem"); setTimeout(() => { const p = $("#paywall"); if (p) { p.scrollIntoView({ block: "start" }); p.classList.add("guide-hl"); setTimeout(() => p.classList.remove("guide-hl"), 2400); } }, 60); });
   if (!(window.claude&&window.claude.standalone)) item("📂 Мои навыки" + (MYS.loaded && MYS.list.length ? " (" + MYS.list.length + ")" : ""), () => selectTab("mine"));
   item("★ Premium-навыки", () => selectTab("prem"));
-  if ((window.claude&&window.claude.standalone)) item("🔑 Ключ Claude API", () => window.claude.settings());
+  if ((window.claude&&window.claude.standalone)) item("✦ Создать навык в Claude", () => window.claude.openClaude());
   if (ACCESS.owner && !(window.claude&&window.claude.standalone)) item("⚙ Кабинет администратора", () => { selectTab("admin"); renderAdmin(); });
   if (ACCESS.owner && CONFIG.sub.enabled) item(ACCESS.preview ? "Выйти из просмотра покупателя" : "👁 Посмотреть как покупатель", () => setPreview(!ACCESS.preview));
   m.append(themeSeg());
@@ -5602,7 +5600,7 @@ function siteMenu(open){
   it("О сайте", "Как создаются навыки и что где находится", () => selectTab("info"));
   it("🛡 Безопасность", "Какие проверки проходят навыки", () => selectTab("security"));
   it("⬇ Приложение", "Ярлык на рабочий стол и на телефон", () => selectTab("app"));
-  if ((window.claude&&window.claude.standalone)) it("🔑 Ключ Claude API", window.claude.hasKey() ? "Ключ сохранён в этом браузере" : "Нужен для создания навыков и тестов", () => window.claude.settings());
+  if ((window.claude&&window.claude.standalone)) it("✦ Создать навык в Claude", "Под вашим аккаунтом Claude, без ключей и оплаты", () => window.claude.openClaude());
 }
 $("#info-btn").onclick = ev => { ev.stopPropagation(); siteMenu(); };
 document.addEventListener("click", ev => { const m = $("#site-menu"); if (m && !m.hidden && !m.contains(ev.target)) siteMenu(false); });
