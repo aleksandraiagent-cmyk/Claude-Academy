@@ -50,3 +50,14 @@ body.maint-lock{overflow:hidden}
 .car-nav:hover{color:var(--ink);border-color:var(--line-strong)}
 @media (max-width:560px){.car-nav{display:none}.fe-row{grid-template-columns:60px 70px 1fr auto}}
 @media (prefers-reduced-motion:reduce){.maint-ic,.sc-dot{animation:none}}
+.fire-bal{display:grid;gap:2px}
+.fb-row{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px}
+.fb-row.prem b{color:var(--gold);font-size:17px}
+.fire-kind{display:grid;gap:8px;border-top:1px solid var(--line);padding-top:12px}
+.fire-kind h3{font:600 16px var(--display);margin:0}
+.fire-kind .note{margin:0}
+.fire-packs.prem .fire-pack{border-color:var(--gold);background:linear-gradient(160deg,var(--gold-soft),var(--surface) 55%)}
+.fire-group{display:grid;gap:6px;border:1px solid var(--line);border-radius:var(--r-sm);padding:12px}
+.fire-group.prem{border-color:var(--gold)}
+.fire-edit > .mini{justify-self:start}
+.ok-note{color:var(--good)!important;font-weight:500}
