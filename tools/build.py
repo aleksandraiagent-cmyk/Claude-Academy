@@ -38,6 +38,8 @@ PATCHES = [
      'if (!u || !db) { MYS.err = ' + SA + ' ? "В этой версии сайта созданные навыки сохраняются в разделах «Навыки» и «Premium» в этом браузере." : "Хранилище недоступно: открой сайт в claude.ai под своим аккаунтом.";', 1),
 
     ('it("О сайте", "Как создаются навыки, разделы, подписка"', 'it("О сайте", "Как создаются навыки и что где находится"', 1),
+    # --- live visitor counter needs claude.ai presence: hide it on the standalone site ---
+    ('async function initCounter(){\n  drawCounter();', 'async function initCounter(){\n  if (' + SA + ') return;\n  drawCounter();', 1),
     # --- site menu: API key item ---
     ('  it("⬇ Приложение", "Ярлык на рабочий стол и на телефон", () => selectTab("app"));',
      '  it("⬇ Приложение", "Ярлык на рабочий стол и на телефон", () => selectTab("app"));\n'

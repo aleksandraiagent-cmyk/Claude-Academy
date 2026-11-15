@@ -352,6 +352,67 @@ const fireT = setInterval(() => { if (ACCESS.ready) { clearInterval(fireT); fire
 setTimeout(() => clearInterval(fireT), 20000);
 initCounter().catch(() => {});
 
+/* ---------- голос Джарвиса: Claude → голос браузера/системы → беззвучно ---------- */
+const JVV = { web: null, claudeOff: false, active: "" };
+function jvVoiceWeb(){
+  const S = window.speechSynthesis; if (!S || !window.SpeechSynthesisUtterance) return null;
+  const cb = [], emit = v => cb.forEach(f => { try { f(v); } catch(e) {} });
+  let voices = [], ready = false, run = 0, keep = 0;
+  const load = () => { voices = S.getVoices() || []; ready = voices.length > 0; };
+  load(); try { S.addEventListener("voiceschanged", load); } catch(e) { S.onvoiceschanged = load; }
+  const waitVoices = () => ready ? Promise.resolve() : new Promise(r => { let n = 0; const t = setInterval(() => { load(); if (ready || ++n > 20) { clearInterval(t); r(); } }, 100); });
+  const pick = () => voices.find(v => /^ru/i.test(v.lang) && /Milena|Yuri|Google|Premium|Enhanced|Natural|Online/i.test(v.name)) || voices.find(v => /^ru/i.test(v.lang)) || null;
+  const chunks = t => { const out = []; txt(t).replace(/\s+/g, " ").trim().split(/(?<=[.!?…])\s+/).forEach(s => { while (s.length > 220) { const i = s.lastIndexOf(" ", 220); out.push(s.slice(0, i > 60 ? i : 220)); s = s.slice(i > 60 ? i + 1 : 220); } if (s) out.push(s); }); return out; };
+  const stopKeep = () => { clearInterval(keep); keep = 0; };
+  const api = { web: true,
+    hasRu(){ return !!pick(); },
+    unlock(){ try { const u = new SpeechSynthesisUtterance(" "); u.volume = 0; S.speak(u); } catch(e) {} },
+    async speak(text){
+      const my = ++run; await waitVoices(); if (my !== run) throw { code: "stopped" };
+      try { S.cancel(); } catch(e) {}
+      await new Promise(r => setTimeout(r, 60));
+      const parts = chunks(text); if (!parts.length) return;
+      const v = pick(); emit({ state: "speaking" });
+      stopKeep(); keep = setInterval(() => { try { if (S.speaking && !S.paused) { S.pause(); S.resume(); } } catch(e) {} }, 10000);
+      try {
+        for (const part of parts) {
+          if (my !== run) throw { code: "stopped" };
+          await new Promise((res, rej) => {
+            const u = new SpeechSynthesisUtterance(part); u.lang = v ? v.lang : "ru-RU"; if (v) u.voice = v; u.rate = 1.02; u.pitch = 0.92; u.volume = 1;
+            let started = false; const guard = setTimeout(() => { if (!started && !S.speaking) rej({ code: "error", message: "голос не запустился" }); }, 4000);
+            u.onstart = () => { started = true; };
+            u.onend = () => { clearTimeout(guard); res(); };
+            u.onerror = e => { clearTimeout(guard); rej({ code: /interrupted|canceled/.test(e.error) ? "stopped" : "error", message: e.error }); };
+            S.speak(u);
+          });
+        }
+      } finally { stopKeep(); if (my === run) emit({ state: "idle", reason: "completed" }); }
+    },
+    stop(){ run++; stopKeep(); try { S.cancel(); } catch(e) {} emit({ state: "idle", reason: "viewer_stopped" }); },
+    onState(f){ cb.push(f); } };
+  return api;
+}
+JVV.web = jvVoiceWeb();
+if (JVV.web) JVV.web.onState(({ state }) => { if (JVV.active !== "web") return; JV.speaking = state === "speaking"; try { jvDraw(); } catch(e) {} });
+if (!JV.tts && JVV.web) { JV.tts = JVV.web; try { jvDraw(); } catch(e) {} }
+jvSpeak = async function(text){
+  if (!text) return;
+  if (!JV.voice) { jvFakeSpeak(text); return; }
+  const claudeT = JV.tts && !JV.tts.web && !JVV.claudeOff ? JV.tts : null;
+  if (claudeT) {
+    try { JVV.active = "claude"; await claudeT.speak(text.slice(0, 1900), { language: "ru" }); return; }
+    catch(e) { const c = e && e.code; if (c === "stopped") return; if (c === "not_granted" || c === "unavailable") JVV.claudeOff = true; }
+  }
+  if (JVV.web) {
+    try { JVV.active = "web"; await JVV.web.speak(text); return; }
+    catch(e) { if (e && e.code === "stopped") return; }
+  }
+  jvFakeSpeak(text);
+};
+jvStopSpeak = (f => function(){ try { JVV.web && JVV.web.stop(); } catch(e) {} f(); })(jvStopSpeak);
+/* браузеры дают говорить только после нажатия: разблокируем голос при открытии Джарвиса и нажатии на микрофон */
+document.addEventListener("click", ev => { if (JVV.web && ev.target && ev.target.closest && ev.target.closest(".jv-btn, #jv-mic, #jv-form button, #jv-voice")) JVV.web.unlock(); }, true);
+
 /* ---------- карусель идей тем: крутится по кругу, прозрачная, листается рукой ---------- */
 const CAR = { raf: 0, paused: false, hold: 0, drag: null, sel: "" };
 renderTopics = (f => function(g){
