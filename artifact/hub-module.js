@@ -166,7 +166,7 @@ navSync = function(){
   try { if (!localStorage.getItem("ca-theme")) { THEME.pref = "light"; applyTheme(); } } catch(e) {}
   selectTab("home", true);
 })();
-/* ---------- шапка по центру, робот-гид наверху справа ---------- */
+/* ---------- шапка по центру (робот-гид остаётся внизу справа) ---------- */
 (function hubHeader(){
   const top = document.querySelector("header.top"); if (!top || top.querySelector(".top-c")) return;
   const L = el("div", "top-l"), C = el("div", "top-c"), R = el("div", "top-r");
@@ -175,10 +175,6 @@ navSync = function(){
   if (link) C.append(link); if (title) C.append(title);
   ["#fire-pill", "#jv-btn", "#prof-btn"].forEach(id => { const x = $(id); if (x) R.append(x); });
   top.prepend(L, C, R);
-  const placeRobot = () => { const fab = $("#guide-fab"); if (fab && fab.parentNode !== R) R.append(fab); const bub = $("#guide-bubble"); if (bub && bub.parentNode !== R) R.append(bub); };
-  placeRobot(); setTimeout(placeRobot, 300); setTimeout(placeRobot, 1500);
-  // плашка фонового статуса робота — под шапкой
-  const rs = document.querySelector(".rb-status"); if (rs) R.append(rs);
 })();
 applyConfig = (f => function(){ f(); if (NAV.cur === "home") try { renderHub(); } catch(e) {} })(applyConfig);
 /* ===================== конец древа навыков ===================== */
