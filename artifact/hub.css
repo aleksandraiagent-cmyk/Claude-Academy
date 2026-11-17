@@ -111,3 +111,19 @@ header.top{display:grid!important;grid-template-columns:minmax(0,1fr) auto minma
   .top .fire-pill{display:none}
 }
 @media (max-width:380px){ .top-c .home-link{display:none} }
+
+/* круговое древо на телефоне */
+.hub-sm .hub-lbl{font-size:11.5px}
+.hub-sm .hub-core-k{font-size:9px;letter-spacing:.14em}
+.hub-sm .hub-core-s{display:none}
+.hub-sm .hub-core{padding:6px}
+.hub-sm .hub-cnt{min-width:18px;height:18px;font-size:10px;line-height:18px;padding:0 4px;top:-5px;right:-5px}
+.hub-sm .hub-node{border-width:1.2px}
+.hub-row{width:100%;display:none;gap:10px;margin-top:6px;padding:14px;border:1px solid var(--mint-2);border-radius:18px;background:color-mix(in srgb,var(--surface) 90%,transparent);box-shadow:0 8px 24px var(--glow)}
+.hub-row.on{display:grid;animation:hubLeaf .3s ease-out}
+.hub-row-h{display:grid;grid-template-columns:28px 1fr;column-gap:10px;align-items:center;color:var(--accent)}
+.hub-row-h .hub-ic{width:24px;height:24px;grid-row:span 2}
+.hub-row-h b{font:600 16px var(--display);color:var(--ink)}
+.hub-row-h span{font-size:12.5px;color:var(--muted)}
+.hub-row-l{display:flex;flex-wrap:wrap;gap:8px}
+.hub-row-l .hub-leaf{position:static}

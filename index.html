@@ -1454,6 +1454,22 @@ header.top{display:grid!important;grid-template-columns:minmax(0,1fr) auto minma
   .top .fire-pill{display:none}
 }
 @media (max-width:380px){ .top-c .home-link{display:none} }
+
+/* круговое древо на телефоне */
+.hub-sm .hub-lbl{font-size:11.5px}
+.hub-sm .hub-core-k{font-size:9px;letter-spacing:.14em}
+.hub-sm .hub-core-s{display:none}
+.hub-sm .hub-core{padding:6px}
+.hub-sm .hub-cnt{min-width:18px;height:18px;font-size:10px;line-height:18px;padding:0 4px;top:-5px;right:-5px}
+.hub-sm .hub-node{border-width:1.2px}
+.hub-row{width:100%;display:none;gap:10px;margin-top:6px;padding:14px;border:1px solid var(--mint-2);border-radius:18px;background:color-mix(in srgb,var(--surface) 90%,transparent);box-shadow:0 8px 24px var(--glow)}
+.hub-row.on{display:grid;animation:hubLeaf .3s ease-out}
+.hub-row-h{display:grid;grid-template-columns:28px 1fr;column-gap:10px;align-items:center;color:var(--accent)}
+.hub-row-h .hub-ic{width:24px;height:24px;grid-row:span 2}
+.hub-row-h b{font:600 16px var(--display);color:var(--ink)}
+.hub-row-h span{font-size:12.5px;color:var(--muted)}
+.hub-row-l{display:flex;flex-wrap:wrap;gap:8px}
+.hub-row-l .hub-leaf{position:static}
 </style>
 </head><body><div class="wrap">
   <header class="top">
@@ -7090,11 +7106,12 @@ function hubCount(id){ try { if (id === "lib") return LIB.filter(x => !isPrem(x)
 
 function renderHub(){
   const host = $("#hub"); if (!host) return;
-  const W = host.clientWidth || 360, mode = W >= 620 ? "radial" : "tree";
-  HUB.mode = mode; host.innerHTML = ""; host.className = "hub hub-" + mode;
+  const W = host.clientWidth || 360, mode = W >= 280 ? "radial" : "tree";
+  HUB.mode = mode; HUB.sig = hubSig(); host.innerHTML = ""; host.className = "hub hub-" + mode;
   const T = hubTree();
   if (mode === "tree") return renderHubTree(host, T);
-  const S = Math.min(W, 700), H = S, cx = S / 2, cy = H / 2, R = S * 0.33, nd = Math.max(70, Math.min(88, S * 0.125));
+  const S = Math.min(W, 700), H = S, cx = S / 2, cy = H / 2, small = S < 560, R = S * (small ? 0.355 : 0.33), nd = Math.max(44, Math.min(88, S * (small ? 0.135 : 0.125)));
+  host.classList.toggle("hub-sm", small);
   const stage = el("div", "hub-stage"); stage.style.width = S + "px"; stage.style.height = H + "px";
   const NS = "http://www.w3.org/2000/svg", svg = document.createElementNS(NS, "svg");
   svg.setAttribute("viewBox", "0 0 " + S + " " + H); svg.setAttribute("class", "hub-svg"); svg.setAttribute("aria-hidden", "true");
@@ -7122,31 +7139,41 @@ function renderHub(){
     b.style.animationDelay = (i * -0.7) + "s"; b.setAttribute("aria-expanded", "false"); b.setAttribute("aria-label", p.n.t + ": " + p.n.d);
     b.innerHTML = hubSvg(p.n.ic); const cnt = hubCount(p.n.id); if (cnt != null) b.append(el("i", "hub-cnt", String(cnt)));
     const lb = el("span", "hub-lbl", p.n.t); lb.dataset.id = p.n.id; lb.style.left = p.x + "px"; lb.style.top = (p.y + nd / 2 + 6) + "px";
-    const open = () => hubOpen(p, stage, branch, leaves, { S, cx, cy, R, nd });
-    b.onclick = ev => { ev.stopPropagation(); if (HUB.open === p.n.id) { p.n.sub[0][1](); return; } open(); };
-    b.onmouseenter = () => { if (matchMedia("(hover: hover)").matches) open(); };
-    b.onfocus = open;
+    const open = () => hubOpen(p, stage, branch, leaves, { S, cx, cy, R, nd, small });
+    b.onclick = ev => { ev.stopPropagation(); if (HUB.open === p.n.id && Date.now() - (HUB.at || 0) > 450) { p.n.sub[0][1](); return; } open(); };
+    b.onmouseenter = () => { if (!small && matchMedia("(hover: hover)").matches) open(); };
+    b.onfocus = () => { if (!small) open(); };
     stage.append(b, lb);
   });
-  stage.addEventListener("mouseleave", () => { if (matchMedia("(hover: hover)").matches) hubClose(stage, branch, leaves); });
+  stage.addEventListener("mouseleave", () => { if (!small && matchMedia("(hover: hover)").matches) hubClose(stage, branch, leaves); });
   host.append(stage);
-  host.append(el("p", "hub-hint", "Наведи или нажми на раздел — откроется ветка. Второе нажатие открывает раздел."));
-  if (HUB.open) { const p = pts.find(x => x.n.id === HUB.open); if (p) hubOpen(p, stage, branch, leaves, { S, cx, cy, R, nd }); }
+  if (small) { const row = el("div", "hub-row"); row.id = "hub-row"; host.append(row); }
+  host.append(el("p", "hub-hint", small ? "Нажми на раздел — внизу откроется его ветка. Второе нажатие открывает раздел." : "Наведи или нажми на раздел — откроется ветка. Второе нажатие открывает раздел."));
+  if (HUB.open) { const p = pts.find(x => x.n.id === HUB.open); if (p) hubOpen(p, stage, branch, leaves, { S, cx, cy, R, nd, small }); }
 }
 function hubClose(stage, branch, leaves){
-  HUB.open = null; branch.innerHTML = ""; leaves.innerHTML = "";
+  HUB.open = null; branch.innerHTML = ""; leaves.innerHTML = ""; const hr = $("#hub-row"); if (hr) { hr.innerHTML = ""; hr.classList.remove("on"); }
   stage.querySelectorAll(".hub-node").forEach(n => { n.classList.remove("on"); n.setAttribute("aria-expanded", "false"); });
   stage.querySelectorAll(".hub-spoke").forEach(l => l.classList.remove("on"));
   stage.querySelectorAll(".hub-lbl").forEach(l => l.classList.remove("off"));
   const core = stage.querySelector(".hub-core"); if (core) { core.querySelector(".hub-core-s").textContent = "выбери раздел"; }
 }
 function hubOpen(p, stage, branch, leaves, g){
-  if (HUB.open === p.n.id && leaves.childElementCount) return;
-  hubClose(stage, branch, leaves); HUB.open = p.n.id;
+  const hr0 = $("#hub-row"); if (HUB.open === p.n.id && (leaves.childElementCount || (hr0 && hr0.childElementCount))) return;
+  hubClose(stage, branch, leaves); HUB.open = p.n.id; HUB.at = Date.now();
   const node = stage.querySelector('.hub-node[data-id="' + p.n.id + '"]'); if (node) { node.classList.add("on"); node.setAttribute("aria-expanded", "true"); }
   stage.querySelectorAll('.hub-spoke[data-id="' + p.n.id + '"]').forEach(l => l.classList.add("on"));
   stage.querySelector(".hub-core-s").textContent = p.n.d;
   const lbl = stage.querySelector('.hub-lbl[data-id="' + p.n.id + '"]'); if (lbl) lbl.classList.add("off");
+  if (g.small) {
+    const row = $("#hub-row"); if (!row) return; row.innerHTML = ""; row.classList.add("on");
+    const NS2 = "http://www.w3.org/2000/svg", tw = document.createElementNS(NS2, "path");
+    tw.setAttribute("d", "M" + p.x + "," + (p.y + g.nd / 2) + " C" + p.x + "," + (g.S - 4) + " " + g.cx + "," + (g.S - 30) + " " + g.cx + "," + g.S); tw.setAttribute("class", "hub-twig"); branch.append(tw);
+    const h = el("div", "hub-row-h"); h.innerHTML = hubSvg(p.n.ic); h.append(el("b", null, p.n.t), el("span", null, p.n.d)); row.append(h);
+    const list = el("div", "hub-row-l");
+    p.n.sub.forEach(([label, fn], j) => { const b = el("button", "hub-leaf", label); b.type = "button"; b.style.animationDelay = (60 + j * 60) + "ms"; b.onclick = ev => { ev.stopPropagation(); fn(); }; list.append(b); });
+    row.append(list); return;
+  }
   const NS = "http://www.w3.org/2000/svg", items = p.n.sub, k = items.length, LR = g.R + g.nd * 0.5 + 74, spread = 0.34;
   items.forEach(([label, fn], j) => {
     const a = p.a + (j - (k - 1) / 2) * spread, lx = g.cx + LR * Math.cos(a), ly = g.cy + LR * Math.sin(a);
@@ -7211,8 +7238,8 @@ navSync = function(){
   const hl = $("#home-link"); if (hl) hl.onclick = toHome; const ht = document.querySelector(".home-title b"); if (ht) ht.onclick = toHome;
   const tabs = document.querySelector(".tabs");
   if (tabs && !$("#tab-home")) { const t = el("button", "tab tab-home", "⌂ Главная"); t.id = "tab-home"; t.type = "button"; t.setAttribute("role", "tab"); t.onclick = () => selectTab("home"); tabs.prepend(t); }
-  let last = 0; HUB.ro = new ResizeObserver(() => { const w = host.clientWidth; if (Math.abs(w - last) < 8 || NAV.cur !== "home") return; last = w; renderHub(); }); HUB.ro.observe(host);
-  document.addEventListener("click", ev => { if (NAV.cur !== "home" || HUB.mode !== "radial" || !HUB.open) return; if (ev.target.closest && ev.target.closest(".hub-node,.hub-leaf")) return; HUB.open = null; renderHub(); });
+  let last = window.innerWidth, rt = 0; window.addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(() => { const w = window.innerWidth; if (Math.abs(w - last) < 40 || NAV.cur !== "home") return; last = w; renderHub(); }, 150); });
+  document.addEventListener("click", ev => { if (NAV.cur !== "home" || HUB.mode !== "radial" || !HUB.open || $("#hub").classList.contains("hub-sm")) return; if (ev.target.closest && ev.target.closest(".hub-node,.hub-leaf,.hub-row")) return; HUB.open = null; renderHub(); });
   try { if (!localStorage.getItem("ca-theme")) { THEME.pref = "light"; applyTheme(); } } catch(e) {}
   selectTab("home", true);
 })();
@@ -7226,7 +7253,8 @@ navSync = function(){
   ["#fire-pill", "#jv-btn", "#prof-btn"].forEach(id => { const x = $(id); if (x) R.append(x); });
   top.prepend(L, C, R);
 })();
-applyConfig = (f => function(){ f(); if (NAV.cur === "home") try { renderHub(); } catch(e) {} })(applyConfig);
+function hubSig(){ try { return JSON.stringify(hubTree().map(n => [n.id, n.sub.map(x => x[0]), hubCount(n.id)])); } catch(e) { return ""; } }
+applyConfig = (f => function(){ f(); if (NAV.cur !== "home") return; const sg = hubSig(); if (sg === HUB.sig) return; try { renderHub(); } catch(e) {} })(applyConfig);
 /* ===================== конец древа навыков ===================== */
 
 })();
