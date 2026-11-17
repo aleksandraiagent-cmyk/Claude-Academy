@@ -127,3 +127,21 @@ header.top{display:grid!important;grid-template-columns:minmax(0,1fr) auto minma
 .hub-row-h span{font-size:12.5px;color:var(--muted)}
 .hub-row-l{display:flex;flex-wrap:wrap;gap:8px}
 .hub-row-l .hub-leaf{position:static}
+
+/* центральная кнопка и импульс */
+button.hub-core{cursor:pointer;font:inherit;color:inherit;transition:transform .2s}
+button.hub-core:hover{transform:scale(1.03)}
+button.hub-core:active{transform:scale(.97)}
+.hub-core.hub-hit{animation:hubHit .6s ease-out,hubBreath 5s ease-in-out .6s infinite}
+@keyframes hubHit{0%{transform:scale(.94);box-shadow:0 0 0 0 var(--glow),0 0 0 0 var(--accent-soft)}40%{transform:scale(1.06)}100%{transform:none;box-shadow:0 0 0 26px transparent,0 14px 46px var(--glow)}}
+.hub-wave-box{position:fixed;inset:0;pointer-events:none;z-index:60;overflow:hidden}
+.hub-wave{position:absolute;border-radius:50%;border:2px solid var(--mint-3);box-shadow:0 0 24px var(--glow),inset 0 0 24px var(--glow);opacity:0;animation:hubWave 1.5s cubic-bezier(.2,.6,.3,1) forwards}
+@keyframes hubWave{0%{transform:scale(.6);opacity:.9}70%{opacity:.35}100%{transform:scale(var(--s));opacity:0}}
+.hub-flash{position:absolute;inset:0;background:radial-gradient(circle at var(--x) var(--y),var(--glow),transparent 60%);opacity:0;animation:hubFlash 1.1s ease-out forwards}
+@keyframes hubFlash{0%{opacity:0}20%{opacity:1}100%{opacity:0}}
+.hub-burst .hub-spoke{animation:hubSpoke .9s ease-out var(--d,0ms) both}
+@keyframes hubSpoke{0%{stroke:var(--line-strong)}35%{stroke:var(--accent);stroke-width:3}100%{stroke:var(--line-strong);stroke-width:1.2}}
+.hub-burst .hub-node{animation:hubNodeHit .8s ease-out var(--d,0ms) both}
+@keyframes hubNodeHit{0%{box-shadow:0 0 0 0 var(--glow)}40%{border-color:var(--accent);box-shadow:0 0 0 10px var(--accent-soft),0 0 26px var(--glow);transform:scale(1.1)}100%{box-shadow:0 0 0 0 transparent;transform:none}}
+.hub-burst .hub-pulse{fill:var(--mint-3)}
+@media (prefers-reduced-motion:reduce){.hub-core.hub-hit,.hub-burst .hub-spoke,.hub-burst .hub-node{animation:none}}

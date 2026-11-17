@@ -1470,6 +1470,24 @@ header.top{display:grid!important;grid-template-columns:minmax(0,1fr) auto minma
 .hub-row-h span{font-size:12.5px;color:var(--muted)}
 .hub-row-l{display:flex;flex-wrap:wrap;gap:8px}
 .hub-row-l .hub-leaf{position:static}
+
+/* центральная кнопка и импульс */
+button.hub-core{cursor:pointer;font:inherit;color:inherit;transition:transform .2s}
+button.hub-core:hover{transform:scale(1.03)}
+button.hub-core:active{transform:scale(.97)}
+.hub-core.hub-hit{animation:hubHit .6s ease-out,hubBreath 5s ease-in-out .6s infinite}
+@keyframes hubHit{0%{transform:scale(.94);box-shadow:0 0 0 0 var(--glow),0 0 0 0 var(--accent-soft)}40%{transform:scale(1.06)}100%{transform:none;box-shadow:0 0 0 26px transparent,0 14px 46px var(--glow)}}
+.hub-wave-box{position:fixed;inset:0;pointer-events:none;z-index:60;overflow:hidden}
+.hub-wave{position:absolute;border-radius:50%;border:2px solid var(--mint-3);box-shadow:0 0 24px var(--glow),inset 0 0 24px var(--glow);opacity:0;animation:hubWave 1.5s cubic-bezier(.2,.6,.3,1) forwards}
+@keyframes hubWave{0%{transform:scale(.6);opacity:.9}70%{opacity:.35}100%{transform:scale(var(--s));opacity:0}}
+.hub-flash{position:absolute;inset:0;background:radial-gradient(circle at var(--x) var(--y),var(--glow),transparent 60%);opacity:0;animation:hubFlash 1.1s ease-out forwards}
+@keyframes hubFlash{0%{opacity:0}20%{opacity:1}100%{opacity:0}}
+.hub-burst .hub-spoke{animation:hubSpoke .9s ease-out var(--d,0ms) both}
+@keyframes hubSpoke{0%{stroke:var(--line-strong)}35%{stroke:var(--accent);stroke-width:3}100%{stroke:var(--line-strong);stroke-width:1.2}}
+.hub-burst .hub-node{animation:hubNodeHit .8s ease-out var(--d,0ms) both}
+@keyframes hubNodeHit{0%{box-shadow:0 0 0 0 var(--glow)}40%{border-color:var(--accent);box-shadow:0 0 0 10px var(--accent-soft),0 0 26px var(--glow);transform:scale(1.1)}100%{box-shadow:0 0 0 0 transparent;transform:none}}
+.hub-burst .hub-pulse{fill:var(--mint-3)}
+@media (prefers-reduced-motion:reduce){.hub-core.hub-hit,.hub-burst .hub-spoke,.hub-burst .hub-node{animation:none}}
 </style>
 </head><body><div class="wrap">
   <header class="top">
@@ -7129,7 +7147,8 @@ function renderHub(){
   stage.append(svg);
   const branch = document.createElementNS(NS, "g"); branch.setAttribute("class", "hub-branch"); svg.append(branch);
   // центр
-  const c = el("div", "hub-core"); c.style.width = c.style.height = (S * 0.25) + "px"; c.style.left = (cx - S * 0.125) + "px"; c.style.top = (cy - S * 0.125) + "px";
+  const c = el("button", "hub-core"); c.type = "button"; c.setAttribute("aria-label", "Academy Skills: запустить импульс");
+  c.onclick = ev => { ev.stopPropagation(); hubPulse(c, stage); }; c.style.width = c.style.height = (S * 0.25) + "px"; c.style.left = (cx - S * 0.125) + "px"; c.style.top = (cy - S * 0.125) + "px";
   c.append(el("span", "hub-core-k", "Academy"), el("b", null, "SKILLS"), el("span", "hub-core-s", "выбери раздел"));
   stage.append(c);
   // узлы
@@ -7150,6 +7169,24 @@ function renderHub(){
   if (small) { const row = el("div", "hub-row"); row.id = "hub-row"; host.append(row); }
   host.append(el("p", "hub-hint", small ? "Нажми на раздел — внизу откроется его ветка. Второе нажатие открывает раздел." : "Наведи или нажми на раздел — откроется ветка. Второе нажатие открывает раздел."));
   if (HUB.open) { const p = pts.find(x => x.n.id === HUB.open); if (p) hubOpen(p, stage, branch, leaves, { S, cx, cy, R, nd, small }); }
+}
+/* импульс из центра на весь сайт */
+function hubPulse(core, stage){
+  const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const r = core.getBoundingClientRect(), x = r.left + r.width / 2, y = r.top + r.height / 2;
+  const far = Math.hypot(Math.max(x, innerWidth - x), Math.max(y, innerHeight - y));
+  core.classList.remove("hub-hit"); void core.offsetWidth; core.classList.add("hub-hit");
+  try { navigator.vibrate && navigator.vibrate(25); } catch(e) {}
+  if (!reduce) {
+    const box = el("div", "hub-wave-box"); box.setAttribute("aria-hidden", "true");
+    for (let i = 0; i < 3; i++) { const w = el("i", "hub-wave"); const d = r.width; w.style.cssText = "left:" + (x - d / 2) + "px;top:" + (y - d / 2) + "px;width:" + d + "px;height:" + d + "px;--s:" + ((far * 2.1) / d).toFixed(2) + ";animation-delay:" + (i * 220) + "ms"; box.append(w); }
+    const glow = el("i", "hub-flash"); glow.style.cssText = "--x:" + x + "px;--y:" + y + "px"; box.append(glow);
+    document.body.append(box); setTimeout(() => box.remove(), 2200);
+  }
+  stage.classList.remove("hub-burst"); void stage.offsetWidth; stage.classList.add("hub-burst");
+  stage.querySelectorAll(".hub-node").forEach((n, i) => n.style.setProperty("--d", (180 + i * 70) + "ms"));
+  stage.querySelectorAll(".hub-spoke").forEach((l, i) => l.style.setProperty("--d", (i * 70) + "ms"));
+  clearTimeout(HUB.burstT); HUB.burstT = setTimeout(() => stage.classList.remove("hub-burst"), 1800);
 }
 function hubClose(stage, branch, leaves){
   HUB.open = null; branch.innerHTML = ""; leaves.innerHTML = ""; const hr = $("#hub-row"); if (hr) { hr.innerHTML = ""; hr.classList.remove("on"); }
