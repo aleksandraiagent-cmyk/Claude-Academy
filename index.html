@@ -1477,17 +1477,35 @@ button.hub-core:hover{transform:scale(1.03)}
 button.hub-core:active{transform:scale(.97)}
 .hub-core.hub-hit{animation:hubHit .6s ease-out,hubBreath 5s ease-in-out .6s infinite}
 @keyframes hubHit{0%{transform:scale(.94);box-shadow:0 0 0 0 var(--glow),0 0 0 0 var(--accent-soft)}40%{transform:scale(1.06)}100%{transform:none;box-shadow:0 0 0 26px transparent,0 14px 46px var(--glow)}}
-.hub-wave-box{position:fixed;inset:0;pointer-events:none;z-index:60;overflow:hidden}
-.hub-wave{position:absolute;border-radius:50%;border:2px solid var(--mint-3);box-shadow:0 0 24px var(--glow),inset 0 0 24px var(--glow);opacity:0;animation:hubWave 1.5s cubic-bezier(.2,.6,.3,1) forwards}
-@keyframes hubWave{0%{transform:scale(.6);opacity:.9}70%{opacity:.35}100%{transform:scale(var(--s));opacity:0}}
-.hub-flash{position:absolute;inset:0;background:radial-gradient(circle at var(--x) var(--y),var(--glow),transparent 60%);opacity:0;animation:hubFlash 1.1s ease-out forwards}
-@keyframes hubFlash{0%{opacity:0}20%{opacity:1}100%{opacity:0}}
 .hub-burst .hub-spoke{animation:hubSpoke .9s ease-out var(--d,0ms) both}
 @keyframes hubSpoke{0%{stroke:var(--line-strong)}35%{stroke:var(--accent);stroke-width:3}100%{stroke:var(--line-strong);stroke-width:1.2}}
 .hub-burst .hub-node{animation:hubNodeHit .8s ease-out var(--d,0ms) both}
 @keyframes hubNodeHit{0%{box-shadow:0 0 0 0 var(--glow)}40%{border-color:var(--accent);box-shadow:0 0 0 10px var(--accent-soft),0 0 26px var(--glow);transform:scale(1.1)}100%{box-shadow:0 0 0 0 transparent;transform:none}}
 .hub-burst .hub-pulse{fill:var(--mint-3)}
 @media (prefers-reduced-motion:reduce){.hub-core.hub-hit,.hub-burst .hub-spoke,.hub-burst .hub-node{animation:none}}
+
+/* капля: падение, брызги, круги на воде */
+.drop-box{position:fixed;inset:0;pointer-events:none;z-index:60;overflow:hidden}
+.drop-box i{position:absolute;left:var(--x);top:var(--y);display:block}
+.drop-fall{width:12px;height:16px;margin:-8px 0 0 -6px;border-radius:50% 50% 50% 50%/60% 60% 40% 40%;
+  background:radial-gradient(circle at 35% 30%,#fff,color-mix(in srgb,var(--mint-3) 70%,#fff) 45%,var(--mint-3));box-shadow:0 0 8px var(--glow);opacity:0;animation:dropFall .2s cubic-bezier(.5,0,.9,.5) forwards}
+.drop-box:not(.big) .drop-fall{width:8px;height:10px;margin:-5px 0 0 -4px;animation-duration:.14s}
+@keyframes dropFall{0%{opacity:0;transform:translateY(-46px) scaleY(1.3)}70%{opacity:1}100%{opacity:0;transform:translateY(0) scale(1.6,.3)}}
+.drop-ring{width:4px;height:4px;transform:translate(-50%,-50%);border-radius:50%;opacity:0;
+  border:1.4px solid color-mix(in srgb,var(--mint-3) 75%,transparent);
+  box-shadow:inset 0 1px 0 color-mix(in srgb,#fff 70%,transparent),0 1px 0 color-mix(in srgb,#fff 55%,transparent),0 0 8px var(--glow);
+  animation:dropRing var(--t,2000ms) cubic-bezier(.1,.55,.25,1) forwards}
+@keyframes dropRing{0%{width:4px;height:4px;opacity:0;border-width:2.4px}8%{opacity:var(--o,.7)}55%{opacity:calc(var(--o,.7) * .5)}100%{width:var(--D);height:var(--D);opacity:0;border-width:.6px}}
+.drop-sheen{width:18px;height:18px;margin:-9px 0 0 -9px;border-radius:50%;background:radial-gradient(circle,color-mix(in srgb,#fff 70%,transparent),var(--glow) 40%,transparent 70%);opacity:0;animation:dropSheen 1.4s ease-out .16s forwards}
+@keyframes dropSheen{0%{opacity:0;transform:scale(.4)}25%{opacity:.8}100%{opacity:0;transform:scale(6)}}
+.drop-splash{width:var(--sz);height:var(--sz);margin:calc(var(--sz) / -2) 0 0 calc(var(--sz) / -2);border-radius:50%;background:radial-gradient(circle at 35% 35%,#fff,var(--mint-3));opacity:0;animation:dropSplash .62s cubic-bezier(.2,.7,.4,1) forwards}
+@keyframes dropSplash{0%{opacity:0;transform:translate(0,0) scale(.4)}20%{opacity:1}60%{transform:translate(var(--dx),var(--dy)) scale(1)}100%{opacity:0;transform:translate(calc(var(--dx) * 1.25),calc(var(--dy) + 22px)) scale(.5)}}
+.drop-rebound{width:7px;height:9px;margin:-5px 0 0 -3.5px;border-radius:50% 50% 50% 50%/60% 60% 40% 40%;background:radial-gradient(circle at 35% 30%,#fff,var(--mint-3));opacity:0;animation:dropRebound .7s cubic-bezier(.3,.7,.5,1) .3s forwards}
+@keyframes dropRebound{0%{opacity:0;transform:translateY(0) scale(.4)}30%{opacity:1;transform:translateY(-26px) scale(1)}100%{opacity:0;transform:translateY(0) scale(.5,.2)}}
+/* пружинящее касание */
+.hub-core,.hub-node,.hub-leaf{transition:transform .45s cubic-bezier(.34,1.56,.64,1)}
+.hub-core.is-press,.hub-node.is-press{transform:scale(.92)!important;transition:transform .12s ease-out}
+.hub-leaf.is-press{transform:scale(.94)!important;transition:transform .1s ease-out}
 </style>
 </head><body><div class="wrap">
   <header class="top">
@@ -7148,7 +7166,7 @@ function renderHub(){
   const branch = document.createElementNS(NS, "g"); branch.setAttribute("class", "hub-branch"); svg.append(branch);
   // центр
   const c = el("button", "hub-core"); c.type = "button"; c.setAttribute("aria-label", "Academy Skills: запустить импульс");
-  c.onclick = ev => { ev.stopPropagation(); hubPulse(c, stage); }; c.style.width = c.style.height = (S * 0.25) + "px"; c.style.left = (cx - S * 0.125) + "px"; c.style.top = (cy - S * 0.125) + "px";
+  c.onclick = ev => { ev.stopPropagation(); hubPulse(c, stage, ev); }; c.style.width = c.style.height = (S * 0.25) + "px"; c.style.left = (cx - S * 0.125) + "px"; c.style.top = (cy - S * 0.125) + "px";
   c.append(el("span", "hub-core-k", "Academy"), el("b", null, "SKILLS"), el("span", "hub-core-s", "выбери раздел"));
   stage.append(c);
   // узлы
@@ -7170,24 +7188,44 @@ function renderHub(){
   host.append(el("p", "hub-hint", small ? "Нажми на раздел — внизу откроется его ветка. Второе нажатие открывает раздел." : "Наведи или нажми на раздел — откроется ветка. Второе нажатие открывает раздел."));
   if (HUB.open) { const p = pts.find(x => x.n.id === HUB.open); if (p) hubOpen(p, stage, branch, leaves, { S, cx, cy, R, nd, small }); }
 }
-/* импульс из центра на весь сайт */
-function hubPulse(core, stage){
-  const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
-  const r = core.getBoundingClientRect(), x = r.left + r.width / 2, y = r.top + r.height / 2;
+/* капля дождя: падение, брызги и плавно расходящиеся круги на воде */
+function hubDrop(x, y, big){
+  if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  const box = el("div", "drop-box" + (big ? " big" : "")); box.setAttribute("aria-hidden", "true");
+  box.style.setProperty("--x", x + "px"); box.style.setProperty("--y", y + "px");
   const far = Math.hypot(Math.max(x, innerWidth - x), Math.max(y, innerHeight - y));
-  core.classList.remove("hub-hit"); void core.offsetWidth; core.classList.add("hub-hit");
-  try { navigator.vibrate && navigator.vibrate(25); } catch(e) {}
-  if (!reduce) {
-    const box = el("div", "hub-wave-box"); box.setAttribute("aria-hidden", "true");
-    for (let i = 0; i < 3; i++) { const w = el("i", "hub-wave"); const d = r.width; w.style.cssText = "left:" + (x - d / 2) + "px;top:" + (y - d / 2) + "px;width:" + d + "px;height:" + d + "px;--s:" + ((far * 2.1) / d).toFixed(2) + ";animation-delay:" + (i * 220) + "ms"; box.append(w); }
-    const glow = el("i", "hub-flash"); glow.style.cssText = "--x:" + x + "px;--y:" + y + "px"; box.append(glow);
-    document.body.append(box); setTimeout(() => box.remove(), 2200);
+  const n = big ? 5 : 3, maxD = big ? far * 2.2 : 150;
+  box.append(el("i", "drop-fall"));
+  for (let i = 0; i < n; i++) {
+    const r = el("i", "drop-ring"); const D = maxD * (1 - i * (big ? 0.13 : 0.22));
+    r.style.cssText = "--D:" + Math.round(D) + "px;--t:" + (big ? 2200 + i * 260 : 1100 + i * 160) + "ms;animation-delay:" + (170 + i * (big ? 230 : 140)) + "ms;--o:" + (0.75 - i * (big ? 0.11 : 0.18)).toFixed(2);
+    box.append(r);
   }
-  stage.classList.remove("hub-burst"); void stage.offsetWidth; stage.classList.add("hub-burst");
-  stage.querySelectorAll(".hub-node").forEach((n, i) => n.style.setProperty("--d", (180 + i * 70) + "ms"));
-  stage.querySelectorAll(".hub-spoke").forEach((l, i) => l.style.setProperty("--d", (i * 70) + "ms"));
-  clearTimeout(HUB.burstT); HUB.burstT = setTimeout(() => stage.classList.remove("hub-burst"), 1800);
+  if (big) { box.append(el("i", "drop-sheen"));
+    for (let k = 0; k < 7; k++) { const a = k / 7 * Math.PI * 2 + Math.random() * 0.5, dist = 26 + Math.random() * 22, sp = el("i", "drop-splash");
+      sp.style.cssText = "--dx:" + (Math.cos(a) * dist).toFixed(1) + "px;--dy:" + (Math.sin(a) * dist * 0.7 - 10).toFixed(1) + "px;--sz:" + (3 + Math.random() * 3).toFixed(1) + "px;animation-delay:" + (160 + Math.random() * 40) + "ms"; box.append(sp); }
+    const rb = el("i", "drop-rebound"); box.append(rb); }
+  document.body.append(box); setTimeout(() => box.remove(), big ? 3600 : 1700);
 }
+function hubPulse(core, stage, ev){
+  const r = core.getBoundingClientRect();
+  const x = ev && ev.clientX ? ev.clientX : r.left + r.width / 2, y = ev && ev.clientY ? ev.clientY : r.top + r.height / 2;
+  core.classList.remove("hub-hit"); void core.offsetWidth; core.classList.add("hub-hit");
+  try { navigator.vibrate && navigator.vibrate([10, 40, 14]); } catch(e) {}
+  hubDrop(x, y, true);
+  stage.classList.remove("hub-burst"); void stage.offsetWidth; stage.classList.add("hub-burst");
+  stage.querySelectorAll(".hub-node").forEach((n, i) => n.style.setProperty("--d", (420 + i * 80) + "ms"));
+  stage.querySelectorAll(".hub-spoke").forEach((l, i) => l.style.setProperty("--d", (260 + i * 80) + "ms"));
+  clearTimeout(HUB.burstT); HUB.burstT = setTimeout(() => stage.classList.remove("hub-burst"), 2200);
+}
+/* мягкое «пружинящее» касание и маленькая капля на кружках и подпунктах */
+document.addEventListener("pointerdown", ev => {
+  const t = ev.target.closest && ev.target.closest(".hub-core,.hub-node,.hub-leaf"); if (!t) return;
+  t.classList.add("is-press");
+  const up = () => { t.classList.remove("is-press"); window.removeEventListener("pointerup", up); window.removeEventListener("pointercancel", up); };
+  window.addEventListener("pointerup", up); window.addEventListener("pointercancel", up);
+  if (!t.classList.contains("hub-core")) { hubDrop(ev.clientX, ev.clientY, false); try { navigator.vibrate && navigator.vibrate(8); } catch(e) {} }
+}, true);
 function hubClose(stage, branch, leaves){
   HUB.open = null; branch.innerHTML = ""; leaves.innerHTML = ""; const hr = $("#hub-row"); if (hr) { hr.innerHTML = ""; hr.classList.remove("on"); }
   stage.querySelectorAll(".hub-node").forEach(n => { n.classList.remove("on"); n.setAttribute("aria-expanded", "false"); });

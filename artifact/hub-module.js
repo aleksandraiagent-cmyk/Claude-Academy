@@ -64,7 +64,7 @@ function renderHub(){
   const branch = document.createElementNS(NS, "g"); branch.setAttribute("class", "hub-branch"); svg.append(branch);
   // центр
   const c = el("button", "hub-core"); c.type = "button"; c.setAttribute("aria-label", "Academy Skills: запустить импульс");
-  c.onclick = ev => { ev.stopPropagation(); hubPulse(c, stage); }; c.style.width = c.style.height = (S * 0.25) + "px"; c.style.left = (cx - S * 0.125) + "px"; c.style.top = (cy - S * 0.125) + "px";
+  c.onclick = ev => { ev.stopPropagation(); hubPulse(c, stage, ev); }; c.style.width = c.style.height = (S * 0.25) + "px"; c.style.left = (cx - S * 0.125) + "px"; c.style.top = (cy - S * 0.125) + "px";
   c.append(el("span", "hub-core-k", "Academy"), el("b", null, "SKILLS"), el("span", "hub-core-s", "выбери раздел"));
   stage.append(c);
   // узлы
@@ -86,24 +86,44 @@ function renderHub(){
   host.append(el("p", "hub-hint", small ? "Нажми на раздел — внизу откроется его ветка. Второе нажатие открывает раздел." : "Наведи или нажми на раздел — откроется ветка. Второе нажатие открывает раздел."));
   if (HUB.open) { const p = pts.find(x => x.n.id === HUB.open); if (p) hubOpen(p, stage, branch, leaves, { S, cx, cy, R, nd, small }); }
 }
-/* импульс из центра на весь сайт */
-function hubPulse(core, stage){
-  const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
-  const r = core.getBoundingClientRect(), x = r.left + r.width / 2, y = r.top + r.height / 2;
+/* капля дождя: падение, брызги и плавно расходящиеся круги на воде */
+function hubDrop(x, y, big){
+  if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  const box = el("div", "drop-box" + (big ? " big" : "")); box.setAttribute("aria-hidden", "true");
+  box.style.setProperty("--x", x + "px"); box.style.setProperty("--y", y + "px");
   const far = Math.hypot(Math.max(x, innerWidth - x), Math.max(y, innerHeight - y));
-  core.classList.remove("hub-hit"); void core.offsetWidth; core.classList.add("hub-hit");
-  try { navigator.vibrate && navigator.vibrate(25); } catch(e) {}
-  if (!reduce) {
-    const box = el("div", "hub-wave-box"); box.setAttribute("aria-hidden", "true");
-    for (let i = 0; i < 3; i++) { const w = el("i", "hub-wave"); const d = r.width; w.style.cssText = "left:" + (x - d / 2) + "px;top:" + (y - d / 2) + "px;width:" + d + "px;height:" + d + "px;--s:" + ((far * 2.1) / d).toFixed(2) + ";animation-delay:" + (i * 220) + "ms"; box.append(w); }
-    const glow = el("i", "hub-flash"); glow.style.cssText = "--x:" + x + "px;--y:" + y + "px"; box.append(glow);
-    document.body.append(box); setTimeout(() => box.remove(), 2200);
+  const n = big ? 5 : 3, maxD = big ? far * 2.2 : 150;
+  box.append(el("i", "drop-fall"));
+  for (let i = 0; i < n; i++) {
+    const r = el("i", "drop-ring"); const D = maxD * (1 - i * (big ? 0.13 : 0.22));
+    r.style.cssText = "--D:" + Math.round(D) + "px;--t:" + (big ? 2200 + i * 260 : 1100 + i * 160) + "ms;animation-delay:" + (170 + i * (big ? 230 : 140)) + "ms;--o:" + (0.75 - i * (big ? 0.11 : 0.18)).toFixed(2);
+    box.append(r);
   }
-  stage.classList.remove("hub-burst"); void stage.offsetWidth; stage.classList.add("hub-burst");
-  stage.querySelectorAll(".hub-node").forEach((n, i) => n.style.setProperty("--d", (180 + i * 70) + "ms"));
-  stage.querySelectorAll(".hub-spoke").forEach((l, i) => l.style.setProperty("--d", (i * 70) + "ms"));
-  clearTimeout(HUB.burstT); HUB.burstT = setTimeout(() => stage.classList.remove("hub-burst"), 1800);
+  if (big) { box.append(el("i", "drop-sheen"));
+    for (let k = 0; k < 7; k++) { const a = k / 7 * Math.PI * 2 + Math.random() * 0.5, dist = 26 + Math.random() * 22, sp = el("i", "drop-splash");
+      sp.style.cssText = "--dx:" + (Math.cos(a) * dist).toFixed(1) + "px;--dy:" + (Math.sin(a) * dist * 0.7 - 10).toFixed(1) + "px;--sz:" + (3 + Math.random() * 3).toFixed(1) + "px;animation-delay:" + (160 + Math.random() * 40) + "ms"; box.append(sp); }
+    const rb = el("i", "drop-rebound"); box.append(rb); }
+  document.body.append(box); setTimeout(() => box.remove(), big ? 3600 : 1700);
 }
+function hubPulse(core, stage, ev){
+  const r = core.getBoundingClientRect();
+  const x = ev && ev.clientX ? ev.clientX : r.left + r.width / 2, y = ev && ev.clientY ? ev.clientY : r.top + r.height / 2;
+  core.classList.remove("hub-hit"); void core.offsetWidth; core.classList.add("hub-hit");
+  try { navigator.vibrate && navigator.vibrate([10, 40, 14]); } catch(e) {}
+  hubDrop(x, y, true);
+  stage.classList.remove("hub-burst"); void stage.offsetWidth; stage.classList.add("hub-burst");
+  stage.querySelectorAll(".hub-node").forEach((n, i) => n.style.setProperty("--d", (420 + i * 80) + "ms"));
+  stage.querySelectorAll(".hub-spoke").forEach((l, i) => l.style.setProperty("--d", (260 + i * 80) + "ms"));
+  clearTimeout(HUB.burstT); HUB.burstT = setTimeout(() => stage.classList.remove("hub-burst"), 2200);
+}
+/* мягкое «пружинящее» касание и маленькая капля на кружках и подпунктах */
+document.addEventListener("pointerdown", ev => {
+  const t = ev.target.closest && ev.target.closest(".hub-core,.hub-node,.hub-leaf"); if (!t) return;
+  t.classList.add("is-press");
+  const up = () => { t.classList.remove("is-press"); window.removeEventListener("pointerup", up); window.removeEventListener("pointercancel", up); };
+  window.addEventListener("pointerup", up); window.addEventListener("pointercancel", up);
+  if (!t.classList.contains("hub-core")) { hubDrop(ev.clientX, ev.clientY, false); try { navigator.vibrate && navigator.vibrate(8); } catch(e) {} }
+}, true);
 function hubClose(stage, branch, leaves){
   HUB.open = null; branch.innerHTML = ""; leaves.innerHTML = ""; const hr = $("#hub-row"); if (hr) { hr.innerHTML = ""; hr.classList.remove("on"); }
   stage.querySelectorAll(".hub-node").forEach(n => { n.classList.remove("on"); n.setAttribute("aria-expanded", "false"); });
