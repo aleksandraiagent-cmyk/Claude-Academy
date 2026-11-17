@@ -94,3 +94,28 @@ body.on-home .tabs{display:none}
 .hubt-sub .hub-leaf{position:static;opacity:1;animation:none}
 .tab-home{color:var(--accent)!important}
 @media (prefers-reduced-motion:reduce){.hub-spin,.hub-spin-r,.hub-core,.hub-node,.hub-twig,.hub-leaf,.hubt-n,.hubt-sub li{animation:none!important;opacity:1}.hub-twig{stroke-dashoffset:0}.hub-pulse{display:none}}
+
+/* шапка: меню слева, Academy Skills по центру, профиль и робот справа */
+header.top{display:grid!important;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:10px}
+.top-l{display:flex;align-items:center;gap:8px;justify-self:start}
+.top-c{display:flex;align-items:center;gap:10px;justify-self:center;min-width:0}
+.top-r{display:flex;align-items:center;gap:8px;justify-self:end;position:relative}
+.top-c .home-title{display:grid;text-align:left}
+.top .prof-btn,.top .infobtn{margin:0!important}
+#site-count{justify-content:center}
+/* робот-гид в шапке */
+.top .guide-fab{position:relative!important;right:auto!important;bottom:auto!important;top:auto!important;width:40px;height:40px;border-radius:12px;flex:0 0 40px;z-index:1}
+.top .guide-fab svg{width:34px;height:34px}
+.top .guide-bubble{position:absolute!important;right:0!important;bottom:auto!important;top:calc(100% + 10px)!important;white-space:nowrap;max-width:none}
+.top .guide-bubble::after{content:"";position:absolute;right:14px;top:-6px;width:12px;height:12px;background:inherit;transform:rotate(45deg);border-radius:2px}
+.guide-panel{top:calc(var(--top-h, 64px) + 14px)!important;bottom:auto!important;right:max(16px,calc((100vw - 720px) / 2))!important;max-height:min(620px,calc(100vh - var(--top-h, 64px) - 30px))!important}
+.top .rb-status{position:absolute!important;right:0!important;bottom:auto!important;top:calc(100% + 48px)!important}
+@media (max-width:560px){
+  header.top{gap:6px}
+  .top-c{gap:8px}
+  .top-c .home-title small{display:none}
+  .top-c .home-title b{font-size:15px}
+  .top .fire-pill{display:none}
+  .guide-panel{right:8px!important;left:8px!important;width:auto!important}
+}
+@media (max-width:380px){ .top-c .home-link{display:none} }

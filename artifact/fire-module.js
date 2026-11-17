@@ -105,7 +105,7 @@ renderProfileBtn = (f => function(){ f(); const b = $("#prof-btn"); if (!b) retu
   let p = $("#fire-pill");
   const show = fireOn() && ACCESS.uid && isVisitorView();
   if (!show) { if (p) p.remove(); return; }
-  if (!p) { p = el("button", "fire-pill"); p.id = "fire-pill"; p.type = "button"; p.onclick = ev => { ev.stopPropagation(); fireNeed(); }; b.parentNode.insertBefore(p, b); }
+  if (!p) { p = el("button", "fire-pill"); p.id = "fire-pill"; p.type = "button"; p.onclick = ev => { ev.stopPropagation(); fireNeed(); }; b.parentNode.insertBefore(p, b.parentNode.firstChild); }
   const left = fireLeft(ACCESS.sub), pl = pFireLeft(ACCESS.sub); p.textContent = "🔥 " + (left === Infinity ? "∞" : left) + "  ⭐ " + pl; p.title = "Обычные огоньки: " + (left === Infinity ? "без срока" : left) + ", премиум: " + pl + ". Нажми, чтобы пополнить.";
 })(renderProfileBtn);
 toggleProfile = (f => function(open){ f(open); const m = $("#prof-menu"); if (!m || m.hidden || !fireOn() || !isVisitorView()) return;
