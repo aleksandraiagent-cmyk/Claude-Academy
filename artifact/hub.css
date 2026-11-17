@@ -1,0 +1,96 @@
+/* ===== 🌿 Мятная тема и «Древо навыков» ===== */
+/* layout: header → (на главной) заголовок + радиальное древо разделов; в разделах — прежняя колонка 720px */
+:root{
+  --bg:#F2FAF6; --surface:#FFFFFF; --ink:#13342C; --muted:#557A70; --line:#D7EEE5; --line-strong:#B9DFD1;
+  --accent:#1F9E7E; --accent-soft:#E2F5EE; --primary:#1F9E7E; --on-primary:#FFFFFF; --on-accent:#FFFFFF;
+  --hover:#E8F6F0; --code:#EEF8F4; --good:#18855F; --gold:#93701F; --gold-soft:#FBF5E6;
+  --mint-1:#BFEADB; --mint-2:#7FD3B6; --mint-3:#2FB38E; --glow:rgba(47,179,142,.28);
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0D1A16; --surface:#13241F; --ink:#E2F4ED; --muted:#91B5AA; --line:#1F3830; --line-strong:#2C4B41;
+    --accent:#5ED3AE; --accent-soft:#16302A; --primary:#5ED3AE; --on-primary:#0D1A16; --on-accent:#0D1A16;
+    --hover:#192D27; --code:#0F1D19; --good:#5ED3AE; --gold:#D9B45E; --gold-soft:#2A2414;
+    --mint-1:#1E3D34; --mint-2:#2F7F68; --mint-3:#5ED3AE; --glow:rgba(94,211,174,.22); color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0D1A16; --surface:#13241F; --ink:#E2F4ED; --muted:#91B5AA; --line:#1F3830; --line-strong:#2C4B41;
+  --accent:#5ED3AE; --accent-soft:#16302A; --primary:#5ED3AE; --on-primary:#0D1A16; --on-accent:#0D1A16;
+  --hover:#192D27; --code:#0F1D19; --good:#5ED3AE; --gold:#D9B45E; --gold-soft:#2A2414;
+  --mint-1:#1E3D34; --mint-2:#2F7F68; --mint-3:#5ED3AE; --glow:rgba(94,211,174,.22); color-scheme:dark;
+}
+body{background:radial-gradient(1200px 600px at 50% -10%,var(--accent-soft),transparent 60%) fixed,var(--bg)}
+.seal{background:var(--accent);color:var(--on-accent)}
+.chip[aria-pressed="true"],.car-chip[aria-selected="true"]{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.tab[aria-selected="true"]{color:var(--accent);border-bottom-color:var(--accent)}
+/* Джарвис уходит на задний план: из шапки убран, открывается из древа («О сайте» → «Голосовой помощник») */
+#jv-btn{display:none!important}
+
+/* главная */
+body.on-home .tabs{display:none}
+#view-home > .backbar{display:none!important}
+.hub-hero{text-align:center;display:grid;gap:6px;padding:6px 0 0}
+.hub-hero h1{font:600 clamp(26px,5vw,38px)/1.1 var(--display);letter-spacing:-.03em;color:var(--ink)}
+.hub-hero p{margin:0;color:var(--muted);font-size:15px}
+.hub{position:relative;display:grid;justify-items:center}
+.hub-hint{margin:6px 0 0;font-size:12.5px;color:var(--muted);text-align:center}
+.hub-stage{position:relative;max-width:100%}
+.hub-svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.hub-orbit{fill:none;stroke:var(--line-strong);stroke-width:1}
+.hub-ring{fill:none;stroke:var(--mint-2);stroke-width:1.2;stroke-dasharray:3 7;opacity:.8}
+.hub-ring2{fill:none;stroke:var(--mint-1);stroke-width:1;stroke-dasharray:1 12;opacity:.9}
+.hub-spin{transform-origin:50% 50%;transform-box:view-box;animation:hubSpin 60s linear infinite}
+.hub-spin-r{transform-origin:50% 50%;transform-box:view-box;animation:hubSpin 90s linear infinite reverse}
+@keyframes hubSpin{to{transform:rotate(360deg)}}
+.hub-spoke{stroke:var(--line-strong);stroke-width:1.2;transition:stroke .25s,stroke-width .25s}
+.hub-spoke.on{stroke:var(--accent);stroke-width:2}
+.hub-joint{fill:var(--surface);stroke:var(--mint-2);stroke-width:1.2}
+.hub-pulse{fill:var(--accent);opacity:.75}
+.hub-twig{fill:none;stroke:var(--accent);stroke-width:1.4;stroke-dasharray:240;stroke-dashoffset:240;animation:hubDraw .45s ease-out forwards}
+@keyframes hubDraw{to{stroke-dashoffset:0}}
+.hub-core{position:absolute;border-radius:50%;display:grid;place-content:center;justify-items:center;text-align:center;gap:2px;padding:10px;
+  background:radial-gradient(circle at 50% 35%,var(--surface),var(--accent-soft));border:1.5px solid var(--mint-2);box-shadow:0 0 0 10px color-mix(in srgb,var(--accent-soft) 60%,transparent),0 12px 40px var(--glow);animation:hubBreath 5s ease-in-out infinite}
+@keyframes hubBreath{0%,100%{box-shadow:0 0 0 8px color-mix(in srgb,var(--accent-soft) 60%,transparent),0 10px 34px var(--glow)}50%{box-shadow:0 0 0 14px color-mix(in srgb,var(--accent-soft) 35%,transparent),0 14px 46px var(--glow)}}
+.hub-core b{font:600 clamp(20px,3.6vw,30px)/1 var(--display);letter-spacing:.06em;color:var(--accent)}
+.hub-core-k{font:500 11px var(--mono);letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
+.hub-core-s{font-size:11.5px;line-height:1.3;color:var(--muted);max-width:90%}
+.hub-node{position:absolute;border-radius:50%;border:1.5px solid var(--line-strong);background:color-mix(in srgb,var(--surface) 82%,transparent);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);
+  color:var(--accent);display:grid;place-items:center;cursor:pointer;padding:0;transition:transform .25s,border-color .25s,box-shadow .25s,background .25s;animation:hubFloat 6s ease-in-out infinite}
+.hub-node .hub-ic{width:42%;height:42%}
+.hub-node:hover,.hub-node.on,.hub-node:focus-visible{border-color:var(--accent);background:var(--surface);box-shadow:0 0 0 6px var(--accent-soft),0 10px 26px var(--glow);transform:scale(1.07)}
+.hub-node.on{animation-play-state:paused}
+@keyframes hubFloat{0%,100%{translate:0 0}50%{translate:0 -4px}}
+.hub-cnt{position:absolute;top:-4px;right:-4px;min-width:22px;height:22px;padding:0 6px;border-radius:999px;background:var(--accent);color:var(--on-accent);font:600 11px/22px var(--mono);font-style:normal;text-align:center}
+.hub-lbl{position:absolute;transform:translateX(-50%);font:500 13.5px var(--body);color:var(--ink);white-space:nowrap;pointer-events:none}
+.hub-lbl.off{opacity:0}
+.hub-lbl{transition:opacity .2s}
+.hub-leaves{position:absolute;inset:0;pointer-events:none}
+.hub-leaf{position:absolute;pointer-events:auto;border:1px solid var(--mint-2);background:color-mix(in srgb,var(--surface) 88%,transparent);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);
+  color:var(--ink);border-radius:999px;padding:7px 14px;font:500 13.5px var(--body);cursor:pointer;white-space:nowrap;box-shadow:0 4px 14px var(--glow);opacity:0;animation:hubLeaf .35s ease-out forwards;transition:background .2s,color .2s}
+.hub-leaf:hover,.hub-leaf:focus-visible{background:var(--accent);color:var(--on-accent);border-color:var(--accent)}
+@keyframes hubLeaf{from{opacity:0;transform:scale(.85)}to{opacity:1;transform:none}}
+/* вертикальное древо на узких экранах */
+.hubt-root{justify-self:center;display:grid;justify-items:center;gap:2px;padding:16px 26px;border-radius:999px;border:1.5px solid var(--mint-2);background:radial-gradient(circle at 50% 30%,var(--surface),var(--accent-soft));box-shadow:0 10px 30px var(--glow);margin:4px 0 14px}
+.hubt-root b{font:600 24px/1 var(--display);letter-spacing:.06em;color:var(--accent)}
+.hubt{list-style:none;margin:0;padding:0 0 0 22px;width:100%;position:relative;display:grid;gap:10px}
+.hubt::before{content:"";position:absolute;left:10px;top:-14px;bottom:24px;width:1.5px;background:linear-gradient(var(--mint-2),var(--line))}
+.hubt-n{position:relative;opacity:0;animation:hubLeaf .35s ease-out forwards}
+.hubt-n::before{content:"";position:absolute;left:-12px;top:26px;width:12px;height:1.5px;background:var(--mint-2)}
+.hubt-b{width:100%;display:flex;align-items:center;gap:12px;text-align:left;border:1px solid var(--line);background:color-mix(in srgb,var(--surface) 90%,transparent);border-radius:16px;padding:10px 12px;cursor:pointer;color:var(--ink);position:relative;transition:border-color .2s,box-shadow .2s}
+.hubt-b:hover,.hubt-n.open .hubt-b{border-color:var(--accent);box-shadow:0 6px 18px var(--glow)}
+.hubt-ic{flex:0 0 34px;height:34px;border-radius:50%;display:grid;place-items:center;background:var(--accent-soft);color:var(--accent)}
+.hubt-ic .hub-ic{width:18px;height:18px}
+.hubt-tx{display:grid;flex:1}
+.hubt-tx b{font:600 15px var(--display)}
+.hubt-tx small{font-size:12.5px;color:var(--muted)}
+.hubt-b .hub-cnt{position:static}
+.hubt-sub{list-style:none;margin:0;padding:0 0 0 30px;display:none;gap:6px;position:relative}
+.hubt-sub::before{content:"";position:absolute;left:16px;top:0;bottom:16px;width:1.5px;background:var(--mint-1)}
+.hubt-n.open .hubt-sub{display:grid;margin-top:8px}
+.hubt-sub li{position:relative;opacity:0;animation:hubLeaf .3s ease-out forwards}
+.hubt-sub li::before{content:"";position:absolute;left:-14px;top:50%;width:12px;height:1.5px;background:var(--mint-1)}
+.hubt-sub .hub-leaf{position:static;opacity:1;animation:none}
+.tab-home{color:var(--accent)!important}
+@media (prefers-reduced-motion:reduce){.hub-spin,.hub-spin-r,.hub-core,.hub-node,.hub-twig,.hub-leaf,.hubt-n,.hubt-sub li{animation:none!important;opacity:1}.hub-twig{stroke-dashoffset:0}.hub-pulse{display:none}}
